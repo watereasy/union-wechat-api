@@ -10,9 +10,9 @@ import java.util.ResourceBundle;
 
 public class CommUtil {
 	/** 不要和Properties混用 */
-	private static ResourceBundle bun = ResourceBundle.getBundle("config");
 	private static Properties pps = new Properties();
-	private static String path = "D:\\project\\jd\\union-wechat-api\\target\\test-classes\\config.properties";
+	// 请替换成实际路径
+	private static String path = "D:\\project\\github\\union-wechat-api\\src\\test\\resource\\config.properties";
 	
 	static {
 		try {
@@ -22,10 +22,6 @@ public class CommUtil {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
-	
-	public static String getBundle(String key){
-		return bun.getString(key);
 	}
 	
 	public static String getProperties(String key) throws Exception{

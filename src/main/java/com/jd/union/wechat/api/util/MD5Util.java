@@ -33,15 +33,14 @@ public class MD5Util {
 	/**
 	 * 二进制转十六进制
 	 * @param bytes 字节
-	 * @return
+	 * @return String
 	 */
 	public static String bytesToHex(byte[] bytes) {
 		StringBuilder md5str = new StringBuilder();
 		// 把数组每一字节换成16进制连成md5字符串
 		int digital;
-		for (int i = 0; i < bytes.length; i++) {
-			digital = bytes[i];
-
+		for (byte b : bytes) {
+			digital = b;
 			if (digital < 0) {
 				digital += 256;
 			}

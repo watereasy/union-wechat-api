@@ -4,7 +4,9 @@ package com.jd.union.wechat.api.util;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.jd.union.wechat.api.base.Response;
 import com.jd.union.wechat.api.message.mass.UArticle;
+import com.jd.union.wechat.api.model.MaterialCount;
 import com.jd.union.wechat.api.model.WeixinMedia;
 
 import common.InitUtil;
@@ -43,7 +45,8 @@ public class MaterialUtilTest {
 	@Test
 	public void testAddMedia() {
 		String url = "http://b.hiphotos.baidu.com/baike/g%3D0%3Bw%3D268/sign=92e00c9b8f5494ee97220a125ac8d2c8/29381f30e924b899c83ff41c6d061d950a7bf697.jpg";
-		WeixinMedia media = MaterialUtil.addMedia(InitUtil.accessToken, "image", url);
+		Response<WeixinMedia> response = MaterialUtil.addMedia(InitUtil.accessToken, "image", url);
+		WeixinMedia media = response.getResult();
 		System.out.println(JSON.toJSONString(media));
 	}
 	
@@ -89,8 +92,10 @@ public class MaterialUtilTest {
 		//String url = "http://v.youku.com/v_show/id_XMTI3MTQ1OTA1Ng";
 		String jsonData = "{'description':{'title':'testTitle11','introduction':'testDes11'}}";
 		//String jsonData = "{'title':'testTitle2','introduction':'testDes2'}";
-		Assert.assertNotNull(MaterialUtil.addMaterial(InitUtil.accessToken, url, jsonData));
-		
+		String type = "image";
+		Response<WeixinMedia> response = MaterialUtil.addMaterial(InitUtil.accessToken, type, url, jsonData);
+		System.out.println(JSON.toJSONString(response));
+
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -119,7 +124,8 @@ public class MaterialUtilTest {
 	@Test
 	public void testDelMaterial(){
 		String mediaId = "ohBGsOcqzyMpbKzLN8DFKYJ7ZiaxPkLFa9JBi80M_x0"; // 永久素材medialId
-		Assert.assertTrue(MaterialUtil.delMaterial(InitUtil.accessToken, mediaId));
+		Response response = MaterialUtil.delMaterial(InitUtil.accessToken, mediaId);
+		System.out.println(JSON.toJSONString(response));
 	}
 	
 	@Test
@@ -151,22 +157,15 @@ public class MaterialUtilTest {
 		map.put("index", index);
 		map.put("articles", uArticle);
 		System.out.println(JSONObject.toJSONString(map));
-		Assert.assertTrue(MaterialUtil.updateNews(InitUtil.accessToken, JSONObject.toJSONString(map)));
+		Response response = MaterialUtil.updateNews(InitUtil.accessToken, JSONObject.toJSONString(map));
+		System.out.println(JSON.toJSONString(response));
 		// 界面上查看可能不会立即显示 应该是微信缓存的缘故
 	}
 	
 	@Test
 	public void testGetMaterialCount(){
-		JSONObject jsonObj = MaterialUtil.getMaterialCount(InitUtil.accessToken);
-		System.out.println(jsonObj.toString());
-		if(jsonObj != null){
-			if(jsonObj.containsKey("voice_count")){
-				jsonObj.getInteger("voice_count"); // 语音总数量
-				jsonObj.getInteger("video_count"); // 视频总数量
-				jsonObj.getInteger("image_count"); // 图片总数量
-				jsonObj.getInteger("news_count");  // 图文总数量
-			}
-		}
+		Response<MaterialCount> response = MaterialUtil.getMaterialCount(InitUtil.accessToken);
+		System.out.println("testGetMaterialCount:" + JSON.toJSONString(response));
 	}
 	
 	@Test

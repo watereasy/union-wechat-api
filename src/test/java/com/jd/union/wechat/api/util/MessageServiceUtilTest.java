@@ -1,5 +1,7 @@
 package com.jd.union.wechat.api.util;
 
+import com.alibaba.fastjson.JSON;
+
 import common.InitUtil;
 
 import org.junit.After;
@@ -13,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import static org.junit.Assert.fail;
 
 @Slf4j
-public class CustomServiceUtilTest {
+public class MessageServiceUtilTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -30,39 +32,6 @@ public class CustomServiceUtilTest {
 
 	@After
 	public void tearDown() throws Exception {
-	}
-
-	@Test
-	public void testCreateCustomAccount() {
-//		CustomAccount ca = new CustomAccount();
-////		ca.setKf_account("watereasy@rill2mi");
-////		ca.setNickname("氺易");
-////		ca.setPassword(MD5Util.getMD5("123456"));
-
-		String kfAccount = "watereasy@rill2mi";
-		String nickname = "氺易";
-		
-		System.out.println(CustomServiceUtil.createCustomAccount(InitUtil.accessToken, kfAccount, nickname));
-	}
-
-	@Test
-	public void testUpdateCustomAccount() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	public void testDeleteCustomAccount() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	public void testSetCustomAccountAvatar() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	public void testGetAllCustomAccount() {
-		CustomServiceUtil.getAllCustomAccount(InitUtil.accessToken);
 	}
 
 	@Test
@@ -96,6 +65,19 @@ public class CustomServiceUtilTest {
 	@Test
 	public void testMakeNewsCustomMessage() {
 		fail("Not yet implemented");
+	}
+
+	@Test
+	public void testSendCustomMessage() {
+		String jsonStr = "{\n" +
+				"    \"touser\":\"oV7Lcjpo037FHR4tMtq973wFze7E\",\n" +
+				"    \"msgtype\":\"text\",\n" +
+				"    \"text\":\n" +
+				"    {\n" +
+				"         \"content\":\"Hello World, Welcome coosee\"\n" +
+				"    }\n" +
+				"}";
+		System.out.println(JSON.toJSONString(MessageUtil.sendCustomMessage(InitUtil.accessToken, jsonStr)));
 	}
 
 }

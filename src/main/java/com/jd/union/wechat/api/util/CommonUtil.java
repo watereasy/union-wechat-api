@@ -258,7 +258,7 @@ public class CommonUtil {
 	 * @return IP列表
 	 */
 	public static List<String> getWXIpList(String accessToken) {
-		List<String> list = new ArrayList<String>();
+		List<String> list = new ArrayList<>();
 		String requestUrl = WXIP_URL.replace("ACCESS_TOKEN", accessToken);
 		JSONObject jsonObject = httpsRequest(requestUrl, "GET", null);
 		if(jsonObject != null) {
@@ -275,20 +275,32 @@ public class CommonUtil {
 		return list;
 	}
 
-	// TODO 网络检测 https://mp.weixin.qq.com/wiki?t=resource/res_main&id=21541575776DtsuT
-	public static Object getNetworkDetection(){
-		return null;
+	/**
+	 * 网络检测 https://mp.weixin.qq.com/wiki?t=resource/res_main&id=21541575776DtsuT
+	 * @author zhangjianhui6
+	 * @date 2018/12/26.
+	 * @param accessToken 调用凭据
+	 * @param action 执行的检测动作，允许的值：dns（做域名解析）、ping（做ping检测）、all（dns和ping都做）
+	 * @param operator 指定平台从某个运营商进行检测，允许的值：CHINANET（电信出口）、UNICOM（联通出口）、CAP（腾讯自建出口）、DEFAULT（根据ip来选择运营商）
+	 * @return JSONObject
+	 */
+	public static JSONObject getNetworkDetection(String accessToken, String action, String operator){
+		String requestUrl = NETWORK_DETECTION_URL.replace(Constants.ACCESS_TOKEN, accessToken);
+		String jsonData = "{\"action\": \"%s\", \"check_operator\": \"%s\"}";
+		JSONObject jsonObj = CommonUtil.httpsRequest(requestUrl, Constants.HTTP_POST, String.format(jsonData, action, operator));
+
+		return jsonObj;
 	}
 	
 	/**
 	 * 上传到微信媒体文件
-	 * @param uploadMediaUrl 上传媒体URL
-	 * @param mediaFileUrl
-	 * @param outputStr
-	 * @return
+	 * @param uploadMediaUrl 请求URL
+	 * @param mediaFileUrl 媒体URL
+	 * @param outputStr 参数
+	 * @return String
 	 */
 	public static String uploadWX(String uploadMediaUrl, String mediaFileUrl, String outputStr) {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder builder = new StringBuilder();
 		// 定义数据分隔符
 		String boundary = "------------7da2e536604c8";
 		try {
@@ -343,7 +355,7 @@ public class CommonUtil {
 			BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
 			String str;
 			while ((str = bufferedReader.readLine()) != null) {
-				buffer.append(str);
+				builder.append(str);
 			}
 			bufferedReader.close();
 			inputStreamReader.close();
@@ -353,7 +365,7 @@ public class CommonUtil {
 		} catch (Exception e) {
 			log.error("上传媒体文件失败：{}", e);
 		}
-		return buffer.toString();
+		return builder.toString();
 	}
 	
 	/**

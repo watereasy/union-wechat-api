@@ -1,5 +1,6 @@
 package com.jd.union.wechat.api.model;
 
+import java.io.Serializable;
 import java.util.List;
 
 import lombok.Getter;
@@ -12,8 +13,9 @@ import lombok.ToString;
  *
  */
 @ToString
-public class SNSUserInfo {
-	
+public class SNSUserInfo implements Serializable{
+
+	private static final long serialVersionUID = -525968086315529273L;
 	// 用户标识
 	@Getter @Setter private String openId;
 	// 用户昵称

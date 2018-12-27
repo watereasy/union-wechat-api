@@ -1,5 +1,7 @@
 package com.jd.union.wechat.api.model;
 
+import java.io.Serializable;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -10,8 +12,9 @@ import lombok.ToString;
  *
  */
 @ToString
-public class WeixinOauth2Token {
+public class WeixinOauth2Token implements Serializable{
 
+	private static final long serialVersionUID = 6442006327338232282L;
 	// 网页授权接口调用凭证
 	@Getter @Setter private String accessToken;
 	// 凭证有效时长(s)

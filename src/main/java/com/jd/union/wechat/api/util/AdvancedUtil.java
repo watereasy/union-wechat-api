@@ -1,14 +1,11 @@
 package com.jd.union.wechat.api.util;
 
 import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
-import com.jd.union.wechat.api.message.resp.Article;
-import com.jd.union.wechat.api.message.resp.Music;
-import com.jd.union.wechat.api.model.CustomAccount;
+import com.jd.union.wechat.api.base.Response;
+import com.jd.union.wechat.api.factory.ResponseFactory;
 import com.jd.union.wechat.api.model.MassResult;
 import com.jd.union.wechat.api.model.SNSUserInfo;
-import com.jd.union.wechat.api.model.WeixinGroup;
 import com.jd.union.wechat.api.model.WeixinMedia;
 import com.jd.union.wechat.api.model.WeixinOauth2Token;
 import com.jd.union.wechat.api.model.WeixinQRCode;
@@ -17,8 +14,6 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -30,7 +25,49 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class AdvancedUtil {
-	
+
+	/** 网页授权access_token(GET) */
+	private static final String OAUTH2_ACCESS_TOKEN_URL = "https://api.weixin.qq.com/sns/oauth2/access_token?appid=APPID&secret=SECRET&code=CODE&grant_type=authorization_code";
+	/** 刷新网页授权access_token(GET) */
+	private static final String OAUTH2_REFRESH_TOKEN_URL = "https://api.weixin.qq.com/sns/oauth2/refresh_token?appid=APPID&grant_type=refresh_token&refresh_token=REFRESH_TOKEN";
+	/** 授权凭证（access_token）是否有效(GET) */
+	private static final String OAUTH2_CHECK_TOKEN_URL = "https://api.weixin.qq.com/sns/auth?access_token=ACCESS_TOKEN&openid=OPENID";
+	/** 拉取用户信息(需scope为 snsapi_userinfo)(GET) */
+	private static final String SNS_USERINFO_URL = "https://api.weixin.qq.com/sns/userinfo?access_token=ACCESS_TOKEN&openid=OPENID&lang=zh_CN";
+	/** 创建二维码(POST) */
+	private static final String QRCODE_CREATE_URL = "https://api.weixin.qq.com/cgi-bin/qrcode/create?access_token=ACCESS_TOKEN";
+	/** 换取二维码(GET) */
+	private static final String QRCODE_GET_URL = "https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=TICKET";
+	/** 长链接转短链(POST) */
+	private static final String SHORTURL_URL = "https://api.weixin.qq.com/cgi-bin/shorturl?access_token=ACCESS_TOKEN";
+	/** 上传图文消息素材【订阅号与服务号认证后均可用】(POST) */
+	private static final String MEDIA_UPLOADNEWS_URL = "https://api.weixin.qq.com/cgi-bin/media/uploadnews?access_token=ACCESS_TOKEN";
+	/** 根据标签进行群发【订阅号与服务号认证后均可用】(POST) */
+	private static final String MESSAGE_MASS_SENDALL_URL = "https://api.weixin.qq.com/cgi-bin/message/mass/sendall?access_token=ACCESS_TOKEN";
+	/** 根据OpenID列表群发【订阅号不可用，服务号认证后可用】(POST) */
+	private static final String MESSAGE_MASS_SEND_URL = "https://api.weixin.qq.com/cgi-bin/message/mass/send?access_token=ACCESS_TOKEN";
+	/** 删除群发【订阅号与服务号认证后均可用】(POST) */
+	private static final String MESSAGE_MASS_DELETE_URL = "https://api.weixin.qq.com/cgi-bin/message/mass/delete?access_token=ACCESS_TOKEN";
+	/** 预览接口【订阅号与服务号认证后均可用】(POST) */
+	private static final String MESSAGE_MASS_PREVIEW_URL = "https://api.weixin.qq.com/cgi-bin/message/mass/preview?access_token=ACCESS_TOKEN";
+	/** 查询群发消息发送状态【订阅号与服务号认证后均可用】(POST) */
+	private static final String MESSAGE_MASS_GET_URL = "https://api.weixin.qq.com/cgi-bin/message/mass/get?access_token=ACCESS_TOKEN";
+	/** 设置所属行业(POST) */
+	private static final String TEMPLATE_API_SET_INDUSTRY_URL = "https://api.weixin.qq.com/cgi-bin/template/api_set_industry?access_token=ACCESS_TOKEN";
+	/** 获取设置的行业信息(GET) */
+	private static final String TEMPLATE_GET_INDUSTRY_URL = "https://api.weixin.qq.com/cgi-bin/template/get_industry?access_token=ACCESS_TOKEN";
+	/** 获得模板ID(POST) */
+	private static final String TEMPLATE_API_ADD_TEMPLATE_URL = "https://api.weixin.qq.com/cgi-bin/template/api_add_template?access_token=ACCESS_TOKEN";
+	/** 获取模板列表(GET) */
+	private static final String TEMPLATE_GET_ALL_PRIVATE_TEMPLATE_URL = "https://api.weixin.qq.com/cgi-bin/template/get_all_private_template?access_token=ACCESS_TOKEN";
+	/** 删除模板(POST) */
+	private static final String TEMPLATE_DEL_PRIVATE_TEMPLATE_URL = "https://api.weixin.qq.com/cgi-bin/template/del_private_template?access_token=ACCESS_TOKEN";
+	/** 发送模板消息(POST) */
+	private static final String TEMPLATE_SEND_URL = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=ACCESS_TOKEN";
+	/** 获取公众号的自动回复规则(GET) */
+	private static final String MESSAGE_GET_CURRENT_AUTOREPLY_INFO = "https://api.weixin.qq.com/cgi-bin/get_current_autoreply_info?access_token=ACCESS_TOKEN";
+
+
 	/**
 	 * 获取网页授权凭证
 	 * 
@@ -39,31 +76,26 @@ public class AdvancedUtil {
 	 * @param code 请求code
 	 * @return WeixinAouth2Token
 	 */
-	public static WeixinOauth2Token getOauth2AccessToken(String appId, String appSecret, String code) {
-		WeixinOauth2Token wat = null;
+	@SuppressWarnings({"unchecked"})
+	public static Response<WeixinOauth2Token> getOauth2AccessToken(String appId, String appSecret, String code) {
+		Response response = ResponseFactory.getInstance();
+		WeixinOauth2Token wat;
 		// 拼接请求地址
-		String requestUrl = "https://api.weixin.qq.com/sns/oauth2/access_token?appid=APPID&secret=SECRET&code=CODE&grant_type=authorization_code";
-		requestUrl = requestUrl.replace("APPID", appId);
-		requestUrl = requestUrl.replace("SECRET", appSecret);
-		requestUrl = requestUrl.replace("CODE", code);
+		String requestUrl = OAUTH2_ACCESS_TOKEN_URL.replace(Constants.APPID, appId).replace(Constants.SECRET, appSecret).replace(Constants.CODE, code);
 		// 获取网页授权凭证
-		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, "GET", null);
+		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, Constants.HTTP_GET, Constants.EMPTY);
 		if (null != jsonObject) {
 			try {
-				wat = new WeixinOauth2Token();
-				wat.setAccessToken(jsonObject.getString("access_token"));
-				wat.setExpiresIn(jsonObject.getIntValue("expires_in"));
-				wat.setRefreshToken(jsonObject.getString("refresh_token"));
-				wat.setOpenId(jsonObject.getString("openid"));
-				wat.setScope(jsonObject.getString("scope"));
+				wat = getWeixinOauth2Token(jsonObject);
+				response.success(wat);
 			} catch (Exception e) {
-				wat = null;
-				int errorCode = jsonObject.getIntValue("errcode");
-				String errorMsg = jsonObject.getString("errmsg");
-				log.error("获取网页授权凭证失败 errcode:{} errmsg:{}"+ errorCode+","+ errorMsg);
+				int errorCode = jsonObject.getIntValue(Constants.ERRCODE);
+				String errorMsg = jsonObject.getString(Constants.ERRMSG);
+				response.fail(errorCode, errorMsg);
+				log.error("获取网页授权凭证失败 errcode:{} errmsg:{}",errorCode, errorMsg);
 			}
 		}
-		return wat;
+		return response;
 	}
 	
 	/**
@@ -73,29 +105,36 @@ public class AdvancedUtil {
 	 * @param refreshToken 刷新token
 	 * @return WeixinAouth2Token
 	 */
-	public static WeixinOauth2Token refreshOauth2AccessToken(String appId, String refreshToken) {
-		WeixinOauth2Token wat = null;
+	@SuppressWarnings({"unchecked"})
+	public static Response<WeixinOauth2Token> refreshOauth2AccessToken(String appId, String refreshToken) {
+		Response response = ResponseFactory.getInstance();
+		WeixinOauth2Token wat;
 		// 拼接请求地址
-		String requestUrl = "https://api.weixin.qq.com/sns/oauth2/refresh_token?appid=APPID&grant_type=refresh_token&refresh_token=REFRESH_TOKEN";
-		requestUrl = requestUrl.replace("APPID", appId);
-		requestUrl = requestUrl.replace("REFRESH_TOKEN", refreshToken);
+		String requestUrl = OAUTH2_REFRESH_TOKEN_URL.replace(Constants.APPID, appId).replace(Constants.REFRESH_TOKEN, refreshToken);
 		// 刷新网页授权凭证
-		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, "GET", null);
+		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, Constants.HTTP_GET, Constants.EMPTY);
 		if (null != jsonObject) {
 			try {
-				wat = new WeixinOauth2Token();
-				wat.setAccessToken(jsonObject.getString("access_token"));
-				wat.setExpiresIn(jsonObject.getIntValue("expires_in"));
-				wat.setRefreshToken(jsonObject.getString("refresh_token"));
-				wat.setOpenId(jsonObject.getString("openid"));
-				wat.setScope(jsonObject.getString("scope"));
+				wat = getWeixinOauth2Token(jsonObject);
+				response.success(wat);
 			} catch (Exception e) {
-				wat = null;
-				int errorCode = jsonObject.getIntValue("errcode");
-				String errorMsg = jsonObject.getString("errmsg");
+				int errorCode = jsonObject.getIntValue(Constants.ERRCODE);
+				String errorMsg = jsonObject.getString(Constants.ERRMSG);
+				response.fail(errorCode, errorMsg);
 				log.error("刷新网页授权凭证失败 errcode:{} errmsg:{}", errorCode, errorMsg);
 			}
 		}
+		return response;
+	}
+
+	/** 获取网页授权明细 */
+	private static WeixinOauth2Token getWeixinOauth2Token(JSONObject jsonObject){
+		WeixinOauth2Token wat = new WeixinOauth2Token();
+		wat.setAccessToken(jsonObject.getString(Constants.ACCESS_TOKEN));
+		wat.setExpiresIn(jsonObject.getIntValue("expires_in"));
+		wat.setRefreshToken(jsonObject.getString("refresh_token"));
+		wat.setOpenId(jsonObject.getString("openid"));
+		wat.setScope(jsonObject.getString("scope"));
 		return wat;
 	}
 	
@@ -105,22 +144,21 @@ public class AdvancedUtil {
 	 * @param openId 用户标志（公众号）
 	 * @return true/false
 	 */
-	public static boolean checkOauth2AccessToken(String accessToken, String openId) {
-		boolean result = false;
-		String requestUrl = "https://api.weixin.qq.com/sns/auth?access_token=ACCESS_TOKEN&openid=OPENID";
-		requestUrl = requestUrl.replace("ACCESS_TOKEN", accessToken).replace("OPENID", openId);
-		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, "GET", null);
+	public static Response checkOauth2AccessToken(String accessToken, String openId) {
+		Response response = ResponseFactory.getInstance();
+		String requestUrl = OAUTH2_CHECK_TOKEN_URL.replace(Constants.ACCESS_TOKEN, accessToken).replace(Constants.OPENID, openId);
+		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, Constants.HTTP_GET, Constants.EMPTY);
 		if (null != jsonObject) {
-			int errorCode = jsonObject.getIntValue("errcode");
-			String errorMsg = jsonObject.getString("errmsg");
+			int errorCode = jsonObject.getIntValue(Constants.ERRCODE);
+			String errorMsg = jsonObject.getString(Constants.ERRMSG);
 			if(errorCode == 0) {
-				result = true;
-				log.info("检验授权凭证(access_token)是否有效成功 errcode:{} errmsg:{}", errorCode, errorMsg);
+				response.success();
 			}else{
+				response.fail(errorCode, errorMsg);
 				log.error("检验授权凭证(access_token)是否有效失败 errcode:{} errmsg:{}", errorCode, errorMsg);
 			}
 		}
-		return result;
+		return response;
 	}
 	
 	/**
@@ -131,13 +169,13 @@ public class AdvancedUtil {
 	 * @return SNSUserInfo
 	 */
 	@SuppressWarnings( { "unchecked" })
-	public static SNSUserInfo getSNSUserInfo(String accessToken, String openId) {
-		SNSUserInfo snsUserInfo = null;
+	public static Response<SNSUserInfo> getSNSUserInfo(String accessToken, String openId) {
+		Response response = ResponseFactory.getInstance();
+		SNSUserInfo snsUserInfo;
 		// 拼接请求地址
-		String requestUrl = "https://api.weixin.qq.com/sns/userinfo?access_token=ACCESS_TOKEN&openid=OPENID";
-		requestUrl = requestUrl.replace("ACCESS_TOKEN", accessToken).replace("OPENID", openId);
+		String requestUrl = SNS_USERINFO_URL.replace(Constants.ACCESS_TOKEN, accessToken).replace(Constants.OPENID, openId);
 		// 通过网页授权获取用户信息
-		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, "GET", null);
+		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, Constants.HTTP_GET, Constants.EMPTY);
 
 		if (null != jsonObject) {
 			try {
@@ -162,14 +200,15 @@ public class AdvancedUtil {
 				if(jsonObject.containsKey("unionid")){
 					snsUserInfo.setUnionid(jsonObject.getString("unionid"));
 				}
+				response.success(snsUserInfo);
 			} catch (Exception e) {
-				snsUserInfo = null;
-				int errorCode = jsonObject.getIntValue("errcode");
-				String errorMsg = jsonObject.getString("errmsg");
+				int errorCode = jsonObject.getIntValue(Constants.ERRCODE);
+				String errorMsg = jsonObject.getString(Constants.ERRMSG);
+				response.fail(errorCode, errorMsg);
 				log.error("获取用户信息失败 errcode:{} errmsg:{}", errorCode, errorMsg);
 			}
 		}
-		return snsUserInfo;
+		return response;
 	}
 	
 	/**
@@ -180,15 +219,18 @@ public class AdvancedUtil {
 	 * @param sceneId 场景ID
 	 * @return WeixinQRCode
 	 */
-	public static WeixinQRCode createTemporaryQRCode(String accessToken, int expireSeconds, int sceneId) {
-		WeixinQRCode weixinQRCode = null;
+	@SuppressWarnings( { "unchecked" })
+	public static Response<WeixinQRCode> createTemporaryQRCode(String accessToken, int expireSeconds, int sceneId) {
+		Response response = ResponseFactory.getInstance();
+		WeixinQRCode weixinQRCode;
 		// 拼接请求地址
-		String requestUrl = "https://api.weixin.qq.com/cgi-bin/qrcode/create?access_token=ACCESS_TOKEN";
-		requestUrl = requestUrl.replace("ACCESS_TOKEN", accessToken);
+		String requestUrl = QRCODE_CREATE_URL.replace(Constants.ACCESS_TOKEN, accessToken);
 		// 需要提交的json数据
 		String jsonMsg = "{\"expire_seconds\": %d, \"action_name\": \"QR_SCENE\", \"action_info\": {\"scene\": {\"scene_id\": %d}}}";
+		//或者也可以使用以下POST数据创建字符串形式的二维码参数： TODO
+		//{"expire_seconds": 604800, "action_name": "QR_STR_SCENE", "action_info": {"scene": {"scene_str": "test"}}}
 		// 创建临时带参二维码
-		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, "POST", String.format(jsonMsg, expireSeconds, sceneId));
+		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, Constants.HTTP_POST, String.format(jsonMsg, expireSeconds, sceneId));
 
 		if (null != jsonObject) {
 			try {
@@ -196,15 +238,16 @@ public class AdvancedUtil {
 				weixinQRCode.setTicket(jsonObject.getString("ticket"));
 				weixinQRCode.setExpireSeconds(jsonObject.getIntValue("expire_seconds"));
 				weixinQRCode.setUrl(jsonObject.getString("url"));
+				response.success(weixinQRCode);
 				log.info("创建临时带参二维码成功 ticket:{} expire_seconds:{}", weixinQRCode.getTicket(), weixinQRCode.getExpireSeconds());
 			} catch (Exception e) {
-				weixinQRCode = null;
-				int errorCode = jsonObject.getIntValue("errcode");
-				String errorMsg = jsonObject.getString("errmsg");
+				int errorCode = jsonObject.getIntValue(Constants.ERRCODE);
+				String errorMsg = jsonObject.getString(Constants.ERRMSG);
+				response.fail(errorCode, errorMsg);
 				log.error("创建临时带参二维码失败 errcode:{} errmsg:{}", errorCode, errorMsg);
 			}
 		}
-		return weixinQRCode;
+		return response;
 	}
 	
 	/**
@@ -214,45 +257,52 @@ public class AdvancedUtil {
 	 * @param sceneId 场景ID
 	 * @return ticket
 	 */
-	public static String createPermanentQRCode(String accessToken, int sceneId) {
-		String ticket = null;
+	@SuppressWarnings( { "unchecked" })
+	public static Response<WeixinQRCode> createPermanentQRCode(String accessToken, int sceneId) {
+		Response response = ResponseFactory.getInstance();
+		WeixinQRCode weixinQRCode;
 		// 拼接请求地址
-		String requestUrl = "https://api.weixin.qq.com/cgi-bin/qrcode/create?access_token=ACCESS_TOKEN";
-		requestUrl = requestUrl.replace("ACCESS_TOKEN", accessToken);
+		String requestUrl = QRCODE_CREATE_URL.replace(Constants.ACCESS_TOKEN, accessToken);
 		// 需要提交的json数据
 		String jsonMsg = "{\"action_name\": \"QR_LIMIT_SCENE\", \"action_info\": {\"scene\": {\"scene_id\": %d}}}";
+		//或者也可以使用以下POST数据创建字符串形式的二维码参数：TODO
+		//{"action_name": "QR_LIMIT_STR_SCENE", "action_info": {"scene": {"scene_str": "test"}}}
 		// 创建永久带参二维码
-		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, "POST", String.format(jsonMsg, sceneId));
+		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, Constants.HTTP_POST, String.format(jsonMsg, sceneId));
 
 		if (null != jsonObject) {
 			try {
-				ticket = jsonObject.getString("ticket");
-				log.info("创建永久带参二维码成功 ticket:{}", ticket);
+				weixinQRCode = new WeixinQRCode();
+				weixinQRCode.setTicket(jsonObject.getString("ticket"));
+//				weixinQRCode.setExpireSeconds(jsonObject.getIntValue("expire_seconds"));
+				weixinQRCode.setUrl(jsonObject.getString("url"));
+				response.success(weixinQRCode);
+				log.info("创建永久带参二维码成功 ticket:{}", weixinQRCode.getTicket());
 			} catch (Exception e) {
-				int errorCode = jsonObject.getIntValue("errcode");
-				String errorMsg = jsonObject.getString("errmsg");
+				int errorCode = jsonObject.getIntValue(Constants.ERRCODE);
+				String errorMsg = jsonObject.getString(Constants.ERRMSG);
+				response.fail(errorCode, errorMsg);
 				log.error("创建永久带参二维码失败 errcode:{} errmsg:{}", errorCode, errorMsg);
 			}
 		}
-		return ticket;
+		return response;
 	}
 	
 	/**
 	 * 根据ticket换取二维码
-	 * 
+	 * TODO
 	 * @param ticket 二维码ticket
 	 * @param savePath 保存路径
 	 */
 	public static String getQRCode(String ticket, String savePath) {
 		String filePath;
 		// 拼接请求地址
-		String requestUrl = "https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=TICKET";
-		requestUrl = requestUrl.replace("TICKET", CommonUtil.urlEncodeUTF8(ticket));
+		String requestUrl = QRCODE_GET_URL.replace(Constants.TICKET, CommonUtil.urlEncodeUTF8(ticket));
 		try {
 			URL url = new URL(requestUrl);
 			HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
 			conn.setDoInput(true);
-			conn.setRequestMethod("GET");
+			conn.setRequestMethod(Constants.HTTP_GET);
 
 			if (!savePath.endsWith("/")) {
 				savePath += "/";
@@ -285,237 +335,28 @@ public class AdvancedUtil {
 	 * @param longUrl 长链接
 	 * @return 短链接
 	 */
-	public static String longUrl2shortUrl(String accessToken, String longUrl) {
-		String shortUrl = "";
-		String requestUrl = "https://api.weixin.qq.com/cgi-bin/shorturl?access_token=ACCESS_TOKEN";
-		requestUrl = requestUrl.replace("ACCESS_TOKEN", accessToken);
+	@SuppressWarnings({"unchecked"})
+	public static Response<String> longUrl2shortUrl(String accessToken, String longUrl) {
+		Response response = ResponseFactory.getInstance();
+		String shortUrl;
+		String requestUrl = SHORTURL_URL.replace(Constants.ACCESS_TOKEN, accessToken);
 		String jsonMsg = "{\"action\":\"long2short\",\"long_url\":\"%s\"}";
-		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, "POST", String.format(jsonMsg, longUrl));
+		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, Constants.HTTP_POST, String.format(jsonMsg, longUrl));
 		if(jsonObject != null){
 			try{
 				shortUrl = jsonObject.getString("short_url");
+				response.success(shortUrl);
 				log.info("长链接转短链接成功 shortUrl:{}", shortUrl);
 			} catch (Exception e) {
-				int errorCode = jsonObject.getIntValue("errcode");
-				String errorMsg = jsonObject.getString("errmsg");
+				int errorCode = jsonObject.getIntValue(Constants.ERRCODE);
+				String errorMsg = jsonObject.getString(Constants.ERRMSG);
+				response.fail(errorCode, errorMsg);
 				log.error("长链接转短链接失败 errcode:{} errmsg:{}", errorCode, errorMsg);
 			}
 		}
 		
-		return shortUrl;
+		return response;
 	}
-	
-	/**
-	 * 查询分组
-	 * 
-	 * @param accessToken 调用接口凭证
-	 */
-	@SuppressWarnings( { "unchecked", "deprecation" })
-	public static List<WeixinGroup> getGroups(String accessToken) {
-		List<WeixinGroup> weixinGroupList = null;
-		// 拼接请求地址
-		String requestUrl = "https://api.weixin.qq.com/cgi-bin/groups/get?access_token=ACCESS_TOKEN";
-		requestUrl = requestUrl.replace("ACCESS_TOKEN", accessToken);
-		// 查询分组
-		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, "GET", null);
-
-		if (null != jsonObject) {
-			try {
-				weixinGroupList = JSONArray.parseArray(jsonObject.getJSONArray("groups").toJSONString(),WeixinGroup.class);
-			} catch (JSONException e) {
-				weixinGroupList = null;
-				int errorCode = jsonObject.getIntValue("errcode");
-				String errorMsg = jsonObject.getString("errmsg");
-				log.error("查询分组失败 errcode:{} errmsg:{}", errorCode, errorMsg);
-			}
-		}
-		return weixinGroupList;
-	}
-	
-	/**
-	 * 查询用户所在分组
-	 * @param accessToken 调用凭据
-	 * @param openID 用户标志（公众号）
-	 * @return 分组标志
-	 */
-	public static int queryUserGroup(String accessToken, String openID) {
-		int groupID = -1;
-		String requestUrl = "https://api.weixin.qq.com/cgi-bin/groups/getid?access_token=ACCESS_TOKEN";
-		requestUrl = requestUrl.replace("ACCESS_TOKEN", accessToken);
-		String jsonData = "{\"openid\" : \"%s\" }";
-		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, "POST", String.format(jsonData, openID));
-		if (null != jsonObject) {
-			if(jsonObject.containsKey("groupid")) {
-				groupID = jsonObject.getIntValue("groupid");
-			}else{
-				int errorCode = jsonObject.getIntValue("errcode");
-				String errorMsg = jsonObject.getString("errmsg");
-				log.error("查询分组失败 errcode:{} errmsg:{}", errorCode, errorMsg);
-			}
-		}
-		
-		return groupID;
-	}
-	
-	/**
-	 * 创建分组
-	 * 上限100
-	 * @param accessToken 接口访问凭证
-	 * @param groupName 分组名称
-	 * @return 分组明细
-	 */
-	@SuppressWarnings("deprecation")
-	public static WeixinGroup createGroup(String accessToken, String groupName) {
-		WeixinGroup weixinGroup = null;
-		// 拼接请求地址
-		String requestUrl = "https://api.weixin.qq.com/cgi-bin/groups/create?access_token=ACCESS_TOKEN";
-		requestUrl = requestUrl.replace("ACCESS_TOKEN", accessToken);
-		// 需要提交的json数据
-		String jsonData = "{\"group\" : {\"name\" : \"%s\"}}";
-		// 创建分组
-		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, "POST", String.format(jsonData, groupName));
-
-		if (null != jsonObject) {
-			try {
-				weixinGroup = new WeixinGroup();
-				weixinGroup.setId(jsonObject.getJSONObject("group").getIntValue("id"));
-				weixinGroup.setName(jsonObject.getJSONObject("group").getString("name"));
-			} catch (JSONException e) {
-				weixinGroup = null;
-				int errorCode = jsonObject.getIntValue("errcode");
-				String errorMsg = jsonObject.getString("errmsg");
-				log.error("创建分组失败 errcode:{} errmsg:{}", errorCode, errorMsg);
-			}
-		}
-		return weixinGroup;
-	}
-	
-	/**
-	 * 修改分组名
-	 * 
-	 * @param accessToken 接口访问凭证
-	 * @param groupId 分组id
-	 * @param groupName 修改后的分组名
-	 * @return true | false
-	 */
-	public static boolean updateGroup(String accessToken, int groupId, String groupName) {
-		boolean result = false;
-		// 拼接请求地址
-		String requestUrl = "https://api.weixin.qq.com/cgi-bin/groups/update?access_token=ACCESS_TOKEN";
-		requestUrl = requestUrl.replace("ACCESS_TOKEN", accessToken);
-		// 需要提交的json数据
-		String jsonData = "{\"group\": {\"id\": %d, \"name\": \"%s\"}}";
-		// 修改分组名
-		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, "POST", String.format(jsonData, groupId, groupName));
-
-		if (null != jsonObject) {
-			int errorCode = jsonObject.getIntValue("errcode");
-			String errorMsg = jsonObject.getString("errmsg");
-			if (0 == errorCode) {
-				result = true;
-				log.info("修改分组名成功 errcode:{} errmsg:{}", errorCode, errorMsg);
-			} else {
-				log.error("修改分组名失败 errcode:{} errmsg:{}", errorCode, errorMsg);
-			}
-		}
-		return result;
-	}
-	
-	/**
-	 * 移动用户分组
-	 * 
-	 * @param accessToken 接口访问凭证
-	 * @param openId 用户标识
-	 * @param groupId 分组id
-	 * @return true | false
-	 */
-	public static boolean updateMemberGroup(String accessToken, String openId, int groupId) {
-		boolean result = false;
-		// 拼接请求地址
-		String requestUrl = "https://api.weixin.qq.com/cgi-bin/groups/members/update?access_token=ACCESS_TOKEN";
-		requestUrl = requestUrl.replace("ACCESS_TOKEN", accessToken);
-		// 需要提交的json数据
-		String jsonData = "{\"openid\":\"%s\",\"to_groupid\":%d}";
-		// 移动用户分组
-		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, "POST", String.format(jsonData, openId, groupId));
-
-		if (null != jsonObject) {
-			int errorCode = jsonObject.getIntValue("errcode");
-			String errorMsg = jsonObject.getString("errmsg");
-			if (0 == errorCode) {
-				result = true;
-				log.info("移动用户分组成功 errcode:{} errmsg:{}", errorCode, errorMsg);
-			} else {
-				log.error("移动用户分组失败 errcode:{} errmsg:{}", errorCode, errorMsg);
-			}
-		}
-		return result;
-	}
-	
-	/**
-	 * 批量移动用户分组
-	 * 
-	 * @param accessToken 接口访问凭证
-	 * @param openIdLis 用户标识集合
-	 * @param groupId 分组id
-	 * @return true|false
-	 */
-	public static boolean updateMembersGroup(String accessToken, List<String> openIdLis, int groupId){
-		boolean result = false;
-		// 拼接请求地址
-		String requestUrl = "https://api.weixin.qq.com/cgi-bin/groups/members/batchupdate?access_token=ACCESS_TOKEN";
-		requestUrl = requestUrl.replace("ACCESS_TOKEN", accessToken);
-		// 需要提交的json数据
-		String jsonData = "{\"openid_list\":%s,\"to_groupid\":%d}";
-		// 批量移动用户分组
-		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, "POST", String.format(jsonData, JSONArray.toJSONString(openIdLis), groupId));
-
-		if (null != jsonObject) {
-			int errorCode = jsonObject.getIntValue("errcode");
-			String errorMsg = jsonObject.getString("errmsg");
-			if (0 == errorCode) {
-				result = true;
-				log.info("批量移动用户分组成功 errcode:{} errmsg:{}", errorCode, errorMsg);
-			} else {
-				log.error("批量移动用户分组失败 errcode:{} errmsg:{}", errorCode, errorMsg);
-			}
-		}
-		
-		return result;
-	}
-	
-	/**
-	 * TODO 请求成功jsonObject返回是{}，请微信官方回答
-	 * 删除分组
-	 * 删除一个用户分组，删除分组后，所有该分组内的用户自动进入默认分组
-	 * @param accessToken 接口访问凭证
-	 * @param groupId 分组id
-	 * @return true | false
-	 */
-	public static boolean deleteGroup(String accessToken, int groupId) {
-		boolean result = false;
-		// 拼接请求地址
-		String requestUrl = "https://api.weixin.qq.com/cgi-bin/groups/delete?access_token=ACCESS_TOKEN";
-		requestUrl = requestUrl.replace("ACCESS_TOKEN", accessToken);
-		// 需要提交的json数据
-		String jsonData = "{\"group\":{\"id\":%d}}";
-		// 移动用户分组
-		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, "POST", String.format(jsonData, groupId));
-		if (null != jsonObject) {
-			int errorCode = jsonObject.getIntValue("errcode");
-			String errorMsg = jsonObject.getString("errmsg");
-			if (0 == errorCode) {
-				result = true;
-				log.info("删除分组成功 errcode:{} errmsg:{}", errorCode, errorMsg);
-			} else {
-				log.error("删除分组失败 errcode:{} errmsg:{}", errorCode, errorMsg);
-			}
-		}
-		
-		return result;
-	}
-	
-	
 	
 	/**
 	 * 上传图文消息素材【订阅号与服务号认证后均可用】 
@@ -523,57 +364,62 @@ public class AdvancedUtil {
 	 * @param jsonMsg 消息体
 	 * @return 上传后素材明细
 	 */
-	public static WeixinMedia uploadNews(String accessToken, String jsonMsg) {
-		WeixinMedia weixinMedia = null;
-		String requestUrl = "https://api.weixin.qq.com/cgi-bin/media/uploadnews?access_token=ACCESS_TOKEN";
-		requestUrl = requestUrl.replace("ACCESS_TOKEN", accessToken);
-		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, "POST", jsonMsg);
+	@SuppressWarnings({"unchecked"})
+	public static Response<WeixinMedia> uploadNews(String accessToken, String jsonMsg) {
+		Response response = ResponseFactory.getInstance();
+		WeixinMedia weixinMedia;
+		String requestUrl = MEDIA_UPLOADNEWS_URL.replace(Constants.ACCESS_TOKEN, accessToken);
+		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, Constants.HTTP_POST, jsonMsg);
 		if (null != jsonObject) {
 			if (jsonObject.containsKey("media_id ")) {
 				weixinMedia = new WeixinMedia();
 				weixinMedia.setType(jsonObject.getString("type"));
 				weixinMedia.setMediaId(jsonObject.getString("media_id"));
 				weixinMedia.setCreatedAt(jsonObject.getLong("created_at"));
+				response.success(weixinMedia);
 				log.info("上传图文消息素材成功 errcode:{} errmsg:{}");
 			} else {
-				int errorCode = jsonObject.getIntValue("errcode");
-				String errorMsg = jsonObject.getString("errmsg");
+				int errorCode = jsonObject.getIntValue(Constants.ERRCODE);
+				String errorMsg = jsonObject.getString(Constants.ERRMSG);
+				response.fail(errorCode, errorMsg);
 				log.error("上传图文消息素材失败 errcode:{} errmsg:{}", errorCode,
 						errorMsg);
 			}
 		}
 
-		return weixinMedia;
+		return response;
 	}
 	
 	/**
-	 * 根据分组群发消息【订阅号与服务号认证后均可用】
+	 * 根据标签进行群发【订阅号与服务号认证后均可用】
 	 * @param accessToken 调用凭据
 	 * @param jsonMsg 消息体
 	 * @return 群发结果
 	 */
-	public static MassResult massMsgByGroup(String accessToken, String jsonMsg) {
-		MassResult mr = null;
-		String requestUrl = "https://api.weixin.qq.com/cgi-bin/message/mass/sendall?access_token=ACCESS_TOKEN";
-		requestUrl = requestUrl.replace("ACCESS_TOKEN", accessToken);
-		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, "POST", jsonMsg);
+	@SuppressWarnings({"unchecked"})
+	public static Response<MassResult> massMsgByTag(String accessToken, String jsonMsg) {
+		Response response = ResponseFactory.getInstance();
+		MassResult mr;
+		String requestUrl = MESSAGE_MASS_SENDALL_URL.replace(Constants.ACCESS_TOKEN, accessToken);
+		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, Constants.HTTP_POST, jsonMsg);
 		if (null != jsonObject) {
-			int errCode = jsonObject.getIntValue("errcode");
-			String errMsg = jsonObject.getString("errmsg");
-			mr = new MassResult();
-			mr.setErrCode(errCode);
-			mr.setErrMsg(errMsg);
+			int errCode = jsonObject.getIntValue(Constants.ERRCODE);
+			String errMsg = jsonObject.getString(Constants.ERRMSG);
 			if (errCode == 0) {
-				int msgId = jsonObject.getIntValue("msg_id");
+				mr = new MassResult();
+				Integer msgId = jsonObject.getInteger("msg_id");
+				Long msgDataId = jsonObject.getLong("msg_data_id");
 				mr.setMsgId(msgId);
-				log.info("分组群发图文消息成功 msg_id:{} ", msgId);
+				mr.setMsgDataId(msgDataId);
+				response.success(errCode, errMsg, mr);
+				log.info("标签群发图文消息成功 msg_id:{} ", msgId);
 			} else {
-				log.error("分组群发图文消息失败 errcode:{} errmsg:{}", errCode,
-						errMsg);
+				response.fail(errCode, errMsg);
+				log.error("标签群发图文消息失败 errcode:{} errmsg:{}", errCode, errMsg);
 			}
 		}
 		
-		return mr;
+		return response;
 	}
 	
 	/**
@@ -582,28 +428,29 @@ public class AdvancedUtil {
 	 * @param jsonMsg 消息体
 	 * @return 群发结果
 	 */
-	public static MassResult massMsgByOpenID(String accessToken, String jsonMsg) {
-		MassResult mr = null;
-		String requestUrl = "https://api.weixin.qq.com/cgi-bin/message/mass/send?access_token=ACCESS_TOKEN";
-		requestUrl = requestUrl.replace("ACCESS_TOKEN", accessToken);
-		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, "POST", jsonMsg);
+	@SuppressWarnings({"unchecked"})
+	public static Response<MassResult> massMsgByOpenID(String accessToken, String jsonMsg) {
+		Response response = ResponseFactory.getInstance();
+		MassResult mr;
+		String requestUrl = MESSAGE_MASS_SEND_URL.replace(Constants.ACCESS_TOKEN, accessToken);
+		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, Constants.HTTP_POST, jsonMsg);
 		if (null != jsonObject) {
-			int errCode = jsonObject.getIntValue("errcode");
-			String errMsg = jsonObject.getString("errmsg");
+			int errCode = jsonObject.getIntValue(Constants.ERRCODE);
+			String errMsg = jsonObject.getString(Constants.ERRMSG);
 			mr = new MassResult();
-			mr.setErrCode(errCode);
-			mr.setErrMsg(errMsg);
 			if (errCode == 0) {
-				int msgId = jsonObject.getIntValue("msg_id");
-				mr.setMsgId(msgId);
+				Integer msgId = jsonObject.getInteger("msg_id");
+				Long msgDataId = jsonObject.getLong("msg_data_id");
+				mr.setMsgDataId(msgDataId);
+				response.success(errCode, errMsg, mr);
 				log.info("OpenID群发图文消息成功 msgId:{}", msgId);
 			} else {
-				log.error("OpenID群发图文消息失败 errcode:{} errmsg:{}", errCode,
-						errMsg);
+				response.fail(errCode, errMsg);
+				log.error("OpenID群发图文消息失败 errcode:{} errmsg:{}", errCode, errMsg);
 			}
 		}
-		
-		return mr;
+
+		return response;
 	}
 	
 	/**
@@ -614,24 +461,24 @@ public class AdvancedUtil {
 	 * @param jsonMsg 消息体
 	 * @return 删除群发结果
 	 */
-	public static boolean deleteMassMsg(String accessToken, String jsonMsg) {
-		boolean result = false;
-		String requestUrl = "https://api.weixin.qq.com/cgi-bin/message/mass/delete?access_token=ACCESS_TOKEN";
-		requestUrl = requestUrl.replace("ACCESS_TOKEN", accessToken);
-		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, "POST", jsonMsg);
+	public static Response deleteMassMsg(String accessToken, String jsonMsg) {
+		Response response = ResponseFactory.getInstance();
+		String requestUrl = MESSAGE_MASS_DELETE_URL.replace(Constants.ACCESS_TOKEN, accessToken);
+		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, Constants.HTTP_POST, jsonMsg);
 		if (null != jsonObject) {
-			int errorCode = jsonObject.getIntValue("errcode");
-			String errorMsg = jsonObject.getString("errmsg");
-			if (errorCode == 0) {
-				result = true;
+			int errCode = jsonObject.getIntValue(Constants.ERRCODE);
+			String errMsg = jsonObject.getString(Constants.ERRMSG);
+			if (errCode == 0) {
+				response.success();
 				log.info("群发图文消息成功 errcode:{} errmsg:{}");
 			} else {
-				log.error("群发图文消息失败 errcode:{} errmsg:{}", errorCode,
-						errorMsg);
+				response.fail(errCode, errMsg);
+				log.error("群发图文消息失败 errcode:{} errmsg:{}", errCode,
+						errMsg);
 			}
 		}
 		
-		return result;
+		return response;
 	}
 	
 	/**
@@ -640,29 +487,30 @@ public class AdvancedUtil {
 	 * @param jsonMsg 消息体
 	 * @return 群发预览
 	 */
-	public static MassResult massMsgPreview(String accessToken, String jsonMsg) {
-		MassResult mr = null;
-		String requestUrl = "https://api.weixin.qq.com/cgi-bin/message/mass/preview?access_token=ACCESS_TOKEN";
-		requestUrl = requestUrl.replace("ACCESS_TOKEN", accessToken);
-		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, "POST", jsonMsg);
+	@SuppressWarnings({"unchecked"})
+	public static Response<MassResult> massMsgPreview(String accessToken, String jsonMsg) {
+		Response response = ResponseFactory.getInstance();
+		MassResult mr;
+		String requestUrl = MESSAGE_MASS_PREVIEW_URL.replace(Constants.ACCESS_TOKEN, accessToken);
+		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, Constants.HTTP_POST, jsonMsg);
 		if (null != jsonObject) {
-			int errCode = jsonObject.getIntValue("errcode");
-			String errMsg = jsonObject.getString("errmsg");
+			int errCode = jsonObject.getIntValue(Constants.ERRCODE);
+			String errMsg = jsonObject.getString(Constants.ERRMSG);
 			mr = new MassResult();
-			mr.setErrCode(errCode);
-			mr.setErrMsg(errMsg);
 			if (errCode == 0) {
 				// TODO 并没有msg_id，是不是接口返回有问题(与文档说明不一致)
-				//int msgId = jsonObject.getIntValue("msg_id");
-				//mr.setMsgId(msgId);
+				Integer msgId = jsonObject.getInteger("msg_id");
+				mr.setMsgId(msgId);
+				response.success(errCode, errMsg, mr);
 				log.info("预览群发图文消息成功");
 			} else {
+				response.fail(errCode, errMsg);
 				log.error("预览群发图文消息失败 errcode:{} errmsg:{}", errCode,
 						errMsg);
 			}
 		}
 		
-		return mr;
+		return response;
 	}
 	
 	/**
@@ -671,57 +519,22 @@ public class AdvancedUtil {
 	 * @param jsonMsg 消息体
 	 * @return 群发消息结果
 	 */
-	public static MassResult queryMassMsgStatus(String accessToken, String jsonMsg) {
-		MassResult mr = null;
-		String requestUrl = "https://api.weixin.qq.com/cgi-bin/message/mass/get?access_token=ACCESS_TOKEN";
-		requestUrl = requestUrl.replace("ACCESS_TOKEN", accessToken);
-		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, "POST", jsonMsg);
+	@SuppressWarnings({"unchecked"})
+	public static Response<MassResult> queryMassMsgStatus(String accessToken, String jsonMsg) {
+		Response response = ResponseFactory.getInstance();
+		MassResult mr;
+		String requestUrl = MESSAGE_MASS_GET_URL.replace(Constants.ACCESS_TOKEN, accessToken);
+		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, Constants.HTTP_POST, jsonMsg);
 		if (null != jsonObject) {
 			int msgId  = jsonObject.getIntValue("msg_id");
 			String msgStatus = jsonObject.getString("msg_status");
 			mr = new MassResult();
 			mr.setMsgId(msgId);
 			mr.setMsgStatus(msgStatus);
-			if ("SEND_SUCCESS".equals(msgStatus)) {
-				log.info("查询群发消息结果成功 msgId:{}", msgId);
-			} else {
-				log.error("查询群发消息结果失败 msgId:{} msgStatus:{}", msgId,
-						msgStatus);
-			}
+			response.success(mr);
 		}
 		
-		return mr;
-	}
-	
-	/**
-	 * 获取群发视频的特殊接口
-	 * @param accessToken 调用凭据
-	 * @param jsonMsg 消息体
-	 * @return
-	 * @deprecated (见素材管理)
-	 */
-	@Deprecated
-	public static WeixinMedia getMassVideo(String accessToken, String jsonMsg) {
-		WeixinMedia weixinMedia = null;
-		String requestUrl = "https://file.api.weixin.qq.com/cgi-bin/media/uploadvideo?access_token=ACCESS_TOKEN";
-		requestUrl = requestUrl.replace("ACCESS_TOKEN", accessToken);
-		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, "POST", jsonMsg);
-		if (null != jsonObject) {
-			if (jsonObject.containsKey("media_id ")) {
-				weixinMedia = new WeixinMedia();
-				weixinMedia.setType(jsonObject.getString("type"));
-				weixinMedia.setMediaId(jsonObject.getString("media_id"));
-				weixinMedia.setCreatedAt(jsonObject.getLong("created_at"));
-				log.info("获取群发视频成功 errcode:{} errmsg:{}");
-			} else {
-				int errorCode = jsonObject.getIntValue("errcode");
-				String errorMsg = jsonObject.getString("errmsg");
-				log.error("获取群发视频失败 errcode:{} errmsg:{}", errorCode,
-						errorMsg);
-			}
-		}
-		
-		return weixinMedia;
+		return response;
 	}
 	
 	/**
@@ -731,21 +544,20 @@ public class AdvancedUtil {
 	 * @param industryId2 行业2
 	 */
 	public static void setIndustry(String accessToken, String industryId1, String industryId2) {
-		String requestUrl = "https://api.weixin.qq.com/cgi-bin/template/api_set_industry?access_token=ACCESS_TOKEN";
+		String requestUrl = TEMPLATE_API_SET_INDUSTRY_URL.replace(Constants.ACCESS_TOKEN, accessToken);
 		String jsonMsg = "{\"industry_id1\":\"%s\",\"industry_id2\":\"%s\"}";
-		requestUrl = requestUrl.replace("ACCESS_TOKEN", accessToken);
-		CommonUtil.httpsRequest(requestUrl, "POST", String.format(jsonMsg, industryId1, industryId2));
+		CommonUtil.httpsRequest(requestUrl, Constants.HTTP_POST, String.format(jsonMsg, industryId1, industryId2));
 	}
 	
 	/**
+	 * TODO 解析成对象
 	 * @param accessToken 调用凭据
 	 * @return 已设置行业
 	 */
 	public static JSONObject getIndustry(String accessToken){
-		String requestUrl = "https://api.weixin.qq.com/cgi-bin/template/get_industry?access_token=ACCESS_TOKEN";
-		requestUrl = requestUrl.replace("ACCESS_TOKEN", accessToken);
+		String requestUrl = TEMPLATE_GET_INDUSTRY_URL.replace(Constants.ACCESS_TOKEN, accessToken);
 		// 发起GET请求查询菜单
-		JSONObject jsonObj = CommonUtil.httpsRequest(requestUrl, "GET", null);
+		JSONObject jsonObj = CommonUtil.httpsRequest(requestUrl, Constants.HTTP_GET, Constants.EMPTY);
 		
 		return jsonObj;
 	}
@@ -756,36 +568,38 @@ public class AdvancedUtil {
 	 * @param templateIdshort 模板库中模板的编号，有“TM**”和“OPENTMTM**”等形式
 	 * @return 模板ID
 	 */
-	public static String addTemplateMsg(String accessToken, String templateIdshort) {
-		String templateId = "";
-		String requestUrl = "https://api.weixin.qq.com/cgi-bin/template/api_add_template?access_token=ACCESS_TOKEN";
-		requestUrl = requestUrl.replace("ACCESS_TOKEN", accessToken);
+	@SuppressWarnings({"unchecked"})
+	public static Response<String> addTemplateMsg(String accessToken, String templateIdshort) {
+		Response response = ResponseFactory.getInstance();
+		String templateId;
+		String requestUrl = TEMPLATE_API_ADD_TEMPLATE_URL.replace(Constants.ACCESS_TOKEN, accessToken);
 		String jsonMsg = "{\"template_id_short\":\"%s\"}";
-		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, "POST", String.format(jsonMsg, templateIdshort));
+		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, Constants.HTTP_POST, String.format(jsonMsg, templateIdshort));
 		if(jsonObject != null){
-			int errCode = jsonObject.getIntValue("errcode");
-			String errMsg = jsonObject.getString("errmsg");
+			int errCode = jsonObject.getIntValue(Constants.ERRCODE);
+			String errMsg = jsonObject.getString(Constants.ERRMSG);
 			if(errCode == 0){
 				templateId = jsonObject.getString("template_id");
+				response.success(templateId);
 				log.info("增加模板消息成功 templateId:{}", templateId);
 			} else {
-				log.error("增加模板消息失败 errcode:{} errmsg:{}", errCode,
-						errMsg);
+				response.fail(errCode, errMsg);
+				log.error("增加模板消息失败 errcode:{} errmsg:{}", errCode, errMsg);
 			}
 		}
 		
-		return templateId;
+		return response;
 	}
 	
 	/**
+	 * TODO 解析成对象
 	 * 获取模板列表
 	 * @param accessToken 调用凭据
 	 * @return 模板结果
 	 */
 	public static JSONObject getAllTempalte(String accessToken) {
-		String requestUrl = "https://api.weixin.qq.com/cgi-bin/template/get_all_private_template?access_token=ACCESS_TOKEN";
-		requestUrl = requestUrl.replace("ACCESS_TOKEN", accessToken);
-		JSONObject jsonObj = CommonUtil.httpsRequest(requestUrl, "GET", null);
+		String requestUrl = TEMPLATE_GET_ALL_PRIVATE_TEMPLATE_URL.replace(Constants.ACCESS_TOKEN, accessToken);
+		JSONObject jsonObj = CommonUtil.httpsRequest(requestUrl, Constants.HTTP_GET, Constants.EMPTY);
 		
 		return jsonObj;
 	}
@@ -797,64 +611,67 @@ public class AdvancedUtil {
 	 * @param templateId 模板id
 	 * @return true/false
 	 */
-	public static boolean deleteTempalte(String accessToken, String templateId) {
-		boolean result = false;
-		String requestUrl = "https://api.weixin.qq.com/cgi-bin/template/del_private_template?access_token=ACCESS_TOKEN";
-		requestUrl = requestUrl.replace("ACCESS_TOKEN", accessToken);
+	public static Response deleteTemplate(String accessToken, String templateId) {
+		Response response = ResponseFactory.getInstance();
+		String requestUrl = TEMPLATE_DEL_PRIVATE_TEMPLATE_URL.replace(Constants.ACCESS_TOKEN, accessToken);
 		String jsonData = "{\"template_id\" : \"%s\" }";
 		// 发起请求删除个性化菜单
-		JSONObject jsonObj = CommonUtil.httpsRequest(requestUrl, "POST", String.format(jsonData, templateId));
+		JSONObject jsonObj = CommonUtil.httpsRequest(requestUrl, Constants.HTTP_POST, String.format(jsonData, templateId));
 		
 		if(jsonObj != null){
-			int errorCode = jsonObj.getIntValue("errcode");
-			String errorMsg = jsonObj.getString("errmsg");
-			if(errorCode == 0){
-				result = true;
+			int errCode = jsonObj.getIntValue(Constants.ERRCODE);
+			String errMsg = jsonObj.getString(Constants.ERRMSG);
+			if(errCode == 0){
+				response.success();
 				log.info("删除模板成功");
 			} else {
-				log.error("删除模板失败 errcode:{} errmsg:{}", errorCode, errorMsg);
+				response.fail(errCode, errMsg);
+				log.error("删除模板失败 errcode:{} errmsg:{}", errCode, errMsg);
 			}
 		}
 		
-		return result;
+		return response;
 	}
 	
 	/**
+	 * TODO 解析成对象，入参jsonMsg
 	 * 发送模板消息 
 	 * @param accessToken 调用凭据
 	 * @param jsonMsg 消息体
 	 * @return 消息id
 	 */
-	public static String sendTemplateMsg(String accessToken, String jsonMsg) {
-		String msgid = "";
-		String requestUrl = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=ACCESS_TOKEN";
-		requestUrl = requestUrl.replace("ACCESS_TOKEN", accessToken);
-		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, "POST", jsonMsg);
+	@SuppressWarnings({"unchecked"})
+	public static Response<Long> sendTemplateMsg(String accessToken, String jsonMsg) {
+		Response response = ResponseFactory.getInstance();
+		Long msgid;
+		String requestUrl = TEMPLATE_SEND_URL.replace(Constants.ACCESS_TOKEN, accessToken);
+		JSONObject jsonObject = CommonUtil.httpsRequest(requestUrl, Constants.HTTP_POST, jsonMsg);
 		if(jsonObject != null){
-			int errCode = jsonObject.getIntValue("errcode");
-			String errMsg = jsonObject.getString("errmsg");
+			int errCode = jsonObject.getIntValue(Constants.ERRCODE);
+			String errMsg = jsonObject.getString(Constants.ERRMSG);
 			if(errCode == 0){
-				msgid = jsonObject.getString("msgid");
+				msgid = jsonObject.getLong("msgid");
+				response.success(errCode, errMsg, msgid);
 				log.info("发送模板消息成功 msgid:{}", msgid);
 			} else {
-				log.error("发送模板消息失败 errcode:{} errmsg:{}", errCode,
-						errMsg);
+				response.fail(errCode, errMsg);
+				log.error("发送模板消息失败 errcode:{} errmsg:{}", errCode, errMsg);
 			}
 		}
 		
-		return msgid;
+		return response;
 	}
 	
 	/**
+	 * TODO 解析成对象
 	 * 获取公众号的自动回复规则
 	 * 返回详细文档：https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1433751299&token=&lang=zh_CN
 	 * @param accessToken 调用凭据
 	 * @return 结果
 	 */
 	public static JSONObject getAutoreplayInfo(String accessToken) {
-		String requestUrl = "https://api.weixin.qq.com/cgi-bin/get_current_autoreply_info?access_token=ACCESS_TOKEN";
-		requestUrl = requestUrl.replace("ACCESS_TOKEN", accessToken);
-		JSONObject jsonObj = CommonUtil.httpsRequest(requestUrl, "GET", null);
+		String requestUrl = MESSAGE_GET_CURRENT_AUTOREPLY_INFO.replace(Constants.ACCESS_TOKEN, accessToken);
+		JSONObject jsonObj = CommonUtil.httpsRequest(requestUrl, Constants.HTTP_GET, Constants.EMPTY);
 		
 		return jsonObj;
 	}

@@ -1,5 +1,6 @@
 package com.jd.union.wechat.api.util;
 
+import com.alibaba.fastjson.JSONObject;
 import com.jd.union.wechat.api.model.Token;
 
 import common.CommUtil;
@@ -54,6 +55,14 @@ public class CommonUtilTest {
 	public void testGetWXIpList(){
 		List<String> ipList = CommonUtil.getWXIpList(InitUtil.accessToken);
 		System.out.println("微信IP列表：" + ipList.toString());
+	}
+
+	@Test
+	public void testGetNetworkDetection(){
+		String action = "all";
+		String operator = "DEFAULT";
+		JSONObject jsonObj = CommonUtil.getNetworkDetection(InitUtil.accessToken, action, operator);
+		System.out.println("testGetNetworkDetection:" + jsonObj.toJSONString());
 	}
 
 }

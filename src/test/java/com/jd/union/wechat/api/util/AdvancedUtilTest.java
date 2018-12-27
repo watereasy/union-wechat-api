@@ -1,7 +1,8 @@
 package com.jd.union.wechat.api.util;
 
-import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.jd.union.wechat.api.base.Response;
 import com.jd.union.wechat.api.message.mass.MGFilter;
 import com.jd.union.wechat.api.message.mass.MGNewsMsg;
 import com.jd.union.wechat.api.message.mass.MNews;
@@ -9,15 +10,13 @@ import com.jd.union.wechat.api.message.mass.MPNewsMsg;
 import com.jd.union.wechat.api.message.mass.MPVideoMsg;
 import com.jd.union.wechat.api.message.mass.MVideo;
 import com.jd.union.wechat.api.model.SNSUserInfo;
-import com.jd.union.wechat.api.model.WeixinGroup;
+import com.jd.union.wechat.api.model.WeixinOauth2Token;
 import com.jd.union.wechat.api.model.WeixinQRCode;
-import com.jd.union.wechat.api.model.WeixinUserList;
 
 import common.InitUtil;
 
 import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -54,17 +53,27 @@ public class AdvancedUtilTest {
 
 	@Test
 	public void testGetOauth2AccessToken() {
-		fail("Not yet implemented");
+		String appId = "";
+		String appSecret = "";
+		String code = "";
+		Response<WeixinOauth2Token> response = AdvancedUtil.getOauth2AccessToken(appId, appSecret, code);
+		System.out.println("testGetOauth2AccessToken:" + JSON.toJSONString(response));
 	}
 
 	@Test
 	public void testRefreshOauth2AccessToken() {
-		fail("Not yet implemented");
+		String appId = "";
+		String refreshToken  = "";
+		Response<WeixinOauth2Token> response = AdvancedUtil.refreshOauth2AccessToken(appId, refreshToken);
+		System.out.println("testRefreshOauth2AccessToken:" + JSON.toJSONString(response));
 	}
 
 	@Test
 	public void testCheckOauth2AccessToken() {
-		fail("Not yet implemented");
+		String accessToken = "";
+		String openId = "";
+		Response response = AdvancedUtil.checkOauth2AccessToken(accessToken, openId);
+		System.out.println("testCheckOauth2AccessToken:" + JSON.toJSONString(response));
 	}
 
 	@Test
@@ -74,82 +83,37 @@ public class AdvancedUtilTest {
 		System.out.println(InitUtil.accessToken);
 		accessToken = InitUtil.accessToken;
 		SNSUserInfo user = AdvancedUtil.getSNSUserInfo(accessToken, "oNI8hs5zE2DjCN58Mdpiw8xkQYks");*/
-		SNSUserInfo user = AdvancedUtil.getSNSUserInfo(InitUtil.accessToken, "oR8rRvhSBAkn07aeeEmtTAg_ob8w");
+		Response<SNSUserInfo> user = AdvancedUtil.getSNSUserInfo(InitUtil.accessToken, "oR8rRvhSBAkn07aeeEmtTAg_ob8w");
 		System.out.println(JSONObject.toJSONString(user));
 	}
 
 	@Test
 	public void testCreateTemporaryQRCode() {
-		WeixinQRCode wqr = AdvancedUtil.createTemporaryQRCode(InitUtil.accessToken, 600, 1);
-		String ticket = wqr.getTicket();
+		Response<WeixinQRCode> user = AdvancedUtil.createTemporaryQRCode(InitUtil.accessToken, 600, 1);
+		String ticket = user.getResult().getTicket();
 		//int expireSecond = wqr.getExpireSeconds();
 		System.out.println(AdvancedUtil.getQRCode(ticket, "D:/Download"));
 	}
 
 	@Test
 	public void testCreatePermanentQRCode() {
-		String ticket = AdvancedUtil.createPermanentQRCode(InitUtil.accessToken, 1);
-		System.out.println(AdvancedUtil.getQRCode(ticket, "D:/Download"));
+		Response<WeixinQRCode> response = AdvancedUtil.createPermanentQRCode(InitUtil.accessToken, 1);
+		System.out.println("testCreatePermanentQRCode,response:{}" + JSON.toJSONString(response));
+		System.out.println(AdvancedUtil.getQRCode(response.getResult().getTicket(), "D:/Download"));
 	}
 
 	@Test
 	public void testGetQRCode() {
-		//fail("Not yet implemented");
+		String ticked = "XXXXXXXXXXXXXXXxx";
+		System.out.println(AdvancedUtil.getQRCode(ticked, "D:/Download"));
 	}
 
 	@Test
 	public void testLongUrl2shortUrl() {
 		String longUrl = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx63457c110481fdf2&redirect_uri=http%3a%2f%2ftlactivity.changyou.com%2ftl%2ftwCombine%2fauth.ncdo%3ffrom%3dQR&response_type=code&scope=snsapi_base&state=123#wechat_redirect";
-		AdvancedUtil.longUrl2shortUrl(InitUtil.accessToken, longUrl);
+		Response<String> response = AdvancedUtil.longUrl2shortUrl(InitUtil.accessToken, longUrl);
+		System.out.println("testLongUrl2shortUrl:" + response.getResult());
 		// http://w.url.cn/s/Ae8hx2s
-	}
-
-	@Test
-	public void testGetGroups() {
-		List<WeixinGroup> weixinGroupList = AdvancedUtil.getGroups(InitUtil.accessToken);
-		System.out.println(JSONArray.toJSONString(weixinGroupList));
-	}
-
-	@Test
-	public void testQueryUserGroup() {
-		WeixinUserList weixinUserList = UserUtil.getUserList(InitUtil.accessToken, "");
-		for(String openId : weixinUserList.getOpenIdList()){
-			System.out.println("openId:" + openId + " 所属分组=>" + AdvancedUtil.queryUserGroup(InitUtil.accessToken, openId));
-		}
-	}
-
-	@Test
-	public void testCreateGroup() {
-		WeixinGroup wg = AdvancedUtil.createGroup(InitUtil.accessToken, "test1");
-		if(wg != null){
-			System.out.println("id:" + wg.getId() + "|name:" + wg.getName());
-		}else{
-			fail("请求异常！");
-		}
-	}
-
-	@Test
-	public void testUpdateGroup() {
-		Assert.assertTrue(AdvancedUtil.updateGroup(InitUtil.accessToken, 100, "boolink"));
-	}
-
-	@Test
-	public void testUpdateMemberGroup() {
-		Assert.assertTrue(AdvancedUtil.updateMemberGroup(InitUtil.accessToken, "oNI8hs5eMajBHOdpPzpCXm-Q8CKw", 100));
-	}
-	
-	@Test
-	public void testUpdateMembersGroup() {
-		List<String> openIdLis = new ArrayList<String>();
-		openIdLis.add("oNI8hs3M_-Rwa5JQbN4Z1autC1Ck");
-		openIdLis.add("oNI8hs5zE2DjCN58Mdpiw8xkQYks");
-		Assert.assertTrue(AdvancedUtil.updateMembersGroup(InitUtil.accessToken, openIdLis, 100));
-	}
-	
-	@Test
-	public void testDeleteGroup() {
-		// TODO 微信的返回码为{}有问题 会报错
-		Assert.assertTrue(AdvancedUtil.deleteGroup(InitUtil.accessToken, 103));
 	}
 
 	@Test
@@ -252,8 +216,8 @@ public class AdvancedUtilTest {
 
 	@Test
 	public void testAddTemplateMsg() {
-		String templateId = AdvancedUtil.addTemplateMsg(InitUtil.accessToken, "TM00154");
-		System.out.println(templateId);
+		Response<String> response = AdvancedUtil.addTemplateMsg(InitUtil.accessToken, "TM00154");
+		System.out.println(JSON.toJSONString(response));
 	}
 	
 	@Test
@@ -264,8 +228,8 @@ public class AdvancedUtilTest {
 	
 	@Test
 	public void testDeleteTempalte() {
-		boolean result = AdvancedUtil.deleteTempalte(InitUtil.accessToken, "MemTJRsAgxGbULTnctj9QAQ0USUM7t5tLJBeLLTg0X4");
-		System.out.println(result);
+		Response response = AdvancedUtil.deleteTemplate(InitUtil.accessToken, "MemTJRsAgxGbULTnctj9QAQ0USUM7t5tLJBeLLTg0X4");
+		System.out.println(JSON.toJSONString(response));
 	}
 
 	@Test
@@ -310,7 +274,8 @@ public class AdvancedUtilTest {
 		wrapMap.put("data", dataMap);
 		
 		String jsonMsg = JSONObject.toJSONString(wrapMap);
-		AdvancedUtil.sendTemplateMsg(InitUtil.accessToken, jsonMsg);
+		Response<Long> response = AdvancedUtil.sendTemplateMsg(InitUtil.accessToken, jsonMsg);
+		System.out.println("testSendTemplateMsg:" + JSON.toJSONString(response));
 	}
 	
 	@Test

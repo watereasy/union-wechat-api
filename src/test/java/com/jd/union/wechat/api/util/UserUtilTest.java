@@ -1,7 +1,9 @@
 package com.jd.union.wechat.api.util;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.jd.union.wechat.api.base.Response;
 import com.jd.union.wechat.api.model.UserTag;
 import com.jd.union.wechat.api.model.WeixinUserInfo;
 import com.jd.union.wechat.api.model.WeixinUserList;
@@ -41,7 +43,9 @@ public class UserUtilTest {
 	
 	@Test
 	public void testCreateTag() {
-		UserTag wg = UserUtil.createTag(InitUtil.accessToken, "test1");
+		Response<UserTag> response = UserUtil.createTag(InitUtil.accessToken, "test1");
+		System.out.println("testCreateTag:" + JSON.toJSONString(response));
+		UserTag wg = response.getResult();
 		if(wg != null){
 			System.out.println("id:" + wg.getId() + "|name:" + wg.getName());
 		}else{
@@ -51,23 +55,29 @@ public class UserUtilTest {
 	
 	@Test
 	public void testGetTag() {
-		List<UserTag> userTagList = UserUtil.getTags(InitUtil.accessToken);
+		Response<List<UserTag>> response = UserUtil.getTags(InitUtil.accessToken);
+		System.out.println("testGetTag:" + JSON.toJSONString(response));
+		List<UserTag> userTagList = response.getResult();
 		System.out.println(JSONArray.toJSONString(userTagList));
 	}
 
 	@Test
 	public void testUpdateTag() {
-		Assert.assertTrue(UserUtil.updateTag(InitUtil.accessToken, 100, "boolink111"));
+		Response response = UserUtil.updateTag(InitUtil.accessToken, 100, "boolink111");
+		System.out.println("testUpdateTag:" + JSON.toJSONString(response));
 	}
 	
 	@Test
 	public void testDeleteTag() {
-		Assert.assertTrue(UserUtil.deleteTag(InitUtil.accessToken, 100));
+		Response response = UserUtil.deleteTag(InitUtil.accessToken, 100);
+		System.out.println("testDeleteTag:" + JSON.toJSONString(response));
 	}
 	
 	@Test
 	public void testGetUserTag() {
-		WeixinUserList weixinUserList = UserUtil.getTag(InitUtil.accessToken, 101, "");
+		Response<WeixinUserList> response = UserUtil.getTag(InitUtil.accessToken, 101, "");
+		System.out.println("testGetUserTag:" + JSON.toJSONString(response));
+		WeixinUserList weixinUserList = response.getResult();
 		//System.out.println("总关注用户数：" + weixinUserList.getTotal());
 		System.out.println("本次获取用户数：" + weixinUserList.getCount());
 		System.out.println("OpenID列表：" + weixinUserList.getOpenIdList().toString());
@@ -79,7 +89,8 @@ public class UserUtilTest {
 		List<String> openIdLis = new ArrayList<String>();
 		openIdLis.add("oNI8hs3M_-Rwa5JQbN4Z1autC1Ck");
 		openIdLis.add("oNI8hs2nd1hNB2fv-IlQQI6N3DzA");
-		Assert.assertTrue(UserUtil.batchTagging(InitUtil.accessToken, 105, openIdLis));
+		Response response = UserUtil.batchTagging(InitUtil.accessToken, 105, openIdLis);
+		System.out.println("tesBatchTagging:" + JSON.toJSONString(response));
 	}
 	
 	@Test
@@ -87,25 +98,31 @@ public class UserUtilTest {
 		List<String> openIdLis = new ArrayList<String>();
 		openIdLis.add("oNI8hs3M_-Rwa5JQbN4Z1autC1Ck");
 		openIdLis.add("oNI8hs2nd1hNB2fv-IlQQI6N3DzA");
-		Assert.assertTrue(UserUtil.batchUntagging(InitUtil.accessToken, 105, openIdLis));
+		Response response = UserUtil.batchUntagging(InitUtil.accessToken, 105, openIdLis);
+		System.out.println("testBatchUntagging:" + JSON.toJSONString(response));
 	}
 	
 	@Test
 	public void testGetTagidList() {
-		List<Integer> userTagList = UserUtil.getTagidList(InitUtil.accessToken, "oNI8hs2nd1hNB2fv-IlQQI6N3DzA");
+		Response<List<Integer>> response = UserUtil.getTagidList(InitUtil.accessToken, "oNI8hs2nd1hNB2fv-IlQQI6N3DzA");
+		System.out.println("testGetTagidList:" + JSON.toJSONString(response));
+		List<Integer> userTagList = response.getResult();
 		System.out.println(JSONArray.toJSONString(userTagList));
 	}
 	
 	@Test
 	public void testSetUserRemarkName() {
-		Assert.assertTrue(UserUtil.setUserRemarkName(InitUtil.accessToken, "oNI8hs5zE2DjCN58Mdpiw8xkQYks", "艾莎"));
+		Response response = UserUtil.setUserRemarkName(InitUtil.accessToken, "oNI8hs5zE2DjCN58Mdpiw8xkQYks", "艾莎");
+		System.out.println("testSetUserRemarkName:" + JSON.toJSONString(response));
 	}
 	
 	@Test
 	public void testGetUserInfo() {
-		WeixinUserList weixinUserList = UserUtil.getUserList(InitUtil.accessToken, "");
+		Response<WeixinUserList> response = UserUtil.getUserList(InitUtil.accessToken, "");
+		WeixinUserList weixinUserList = response.getResult();
 		for(String openId : weixinUserList.getOpenIdList()){
-			WeixinUserInfo wui = UserUtil.getUserInfo(InitUtil.accessToken, openId, "");
+			Response<WeixinUserInfo> response1 = UserUtil.getUserInfo(InitUtil.accessToken, openId, "");
+			WeixinUserInfo wui = response1.getResult();
 			System.out.println(wui.getOpenid());
 			//System.out.println(JSONObject.toJSONString(wui).toString());
 			//break;
@@ -115,7 +132,9 @@ public class UserUtilTest {
 	@Test
 	public void testGetUserInfo2() {
 		String openId = "oV7Lcjpo037FHR4tMtq973wFze7E";
-		WeixinUserInfo wui = UserUtil.getUserInfo(InitUtil.accessToken, openId, "");
+		Response<WeixinUserInfo> response  = UserUtil.getUserInfo(InitUtil.accessToken, openId, "");
+		System.out.println("testGetUserInfo2:" + JSON.toJSONString(response));
+		WeixinUserInfo wui = response.getResult();
 		System.out.println(JSONObject.toJSONString(wui));
 	}
 	
@@ -125,7 +144,8 @@ public class UserUtilTest {
 		openIdLis.add("oNI8hs5zE2DjCN58Mdpiw8xkQYks");
 		openIdLis.add("oNI8hs3fJNbbGzvIXwTeU_9EjUVI");
 		openIdLis.add("oNI8hs3M_-Rwa5JQbN4Z1autC1Ck");
-		List<WeixinUserInfo> wuiLis = UserUtil.getUserInfoBatch(InitUtil.accessToken, openIdLis, "");
+		Response<List<WeixinUserInfo>> response = UserUtil.getUserInfoBatch(InitUtil.accessToken, openIdLis, "");
+		List<WeixinUserInfo> wuiLis = response.getResult();
 		for(WeixinUserInfo wui : wuiLis){
 			System.out.println(JSONObject.toJSONString(wui));
 		}
@@ -147,7 +167,8 @@ public class UserUtilTest {
 		openIdLis.add("oR8rRvteSocpyAMs3n4f7UbRYQy8");
 		openIdLis.add("oR8rRvhSBAkn07aeeEmtTAg_ob8w");
 		List<Object[]> batchArgs = new ArrayList<Object[]>();
-		List<WeixinUserInfo> wuiLis = UserUtil.getUserInfoBatch(InitUtil.accessToken, openIdLis, "");
+		Response<List<WeixinUserInfo>> response = UserUtil.getUserInfoBatch(InitUtil.accessToken, openIdLis, "");
+		List<WeixinUserInfo> wuiLis = response.getResult();
 		for(WeixinUserInfo user : wuiLis){
 			System.out.println(JSONObject.toJSONString(user));
 			//System.out.println(user.getUnionid() + "||" + user.getOpenid());
@@ -160,7 +181,8 @@ public class UserUtilTest {
 
 	@Test
 	public void testGetUserList() {
-		WeixinUserList weixinUserList = UserUtil.getUserList(InitUtil.accessToken, "");
+		Response<WeixinUserList> response = UserUtil.getUserList(InitUtil.accessToken, "");
+		WeixinUserList weixinUserList = response.getResult();
 		System.out.println("总关注用户数：" + weixinUserList.getTotal());
 		System.out.println("本次获取用户数：" + weixinUserList.getCount());
 		System.out.println("OpenID列表：" + weixinUserList.getOpenIdList().toString());
@@ -169,7 +191,8 @@ public class UserUtilTest {
 	
 	@Test
 	public void testGetBlackList() {
-		WeixinUserList weixinUserList = UserUtil.getBlackList(InitUtil.accessToken, "");
+		Response<WeixinUserList> response = UserUtil.getBlackList(InitUtil.accessToken, "");
+		WeixinUserList weixinUserList = response.getResult();
 		System.out.println("总黑名单用户数：" + weixinUserList.getTotal());
 		System.out.println("本次获取用户数：" + weixinUserList.getCount());
 		System.out.println("OpenID列表：" + weixinUserList.getOpenIdList().toString());
@@ -181,7 +204,8 @@ public class UserUtilTest {
 		List<String> openIdLis = new ArrayList<String>();
 		openIdLis.add("oNI8hs3M_-Rwa5JQbN4Z1autC1Ck");
 		openIdLis.add("oNI8hs2nd1hNB2fv-IlQQI6N3DzA");
-		Assert.assertTrue(UserUtil.batchBlackList(InitUtil.accessToken, openIdLis));
+		Response response = UserUtil.batchBlackList(InitUtil.accessToken, openIdLis);
+		System.out.println("testBatchBlackList:" + JSON.toJSONString(response));
 	}
 	
 	@Test
@@ -189,6 +213,7 @@ public class UserUtilTest {
 		List<String> openIdLis = new ArrayList<String>();
 		openIdLis.add("oNI8hs3M_-Rwa5JQbN4Z1autC1Ck");
 		openIdLis.add("oNI8hs2nd1hNB2fv-IlQQI6N3DzA");
-		Assert.assertTrue(UserUtil.batchUnblackList(InitUtil.accessToken, openIdLis));
+		Response response = UserUtil.batchUnblackList(InitUtil.accessToken, openIdLis);
+		System.out.println("testBatchUnblackList:" + JSON.toJSONString(response));
 	}
 }
