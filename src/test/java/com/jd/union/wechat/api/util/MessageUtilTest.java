@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import static org.junit.Assert.fail;
 
 @Slf4j
-public class MessageServiceUtilTest {
+public class MessageUtilTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {

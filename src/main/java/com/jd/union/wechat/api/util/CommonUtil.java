@@ -304,8 +304,17 @@ public class CommonUtil {
 		// 定义数据分隔符
 		String boundary = "------------7da2e536604c8";
 		try {
+			// 创建SSLContext对象，并使用我们指定的信任管理器初始化
+			TrustManager[] tm = { new MyX509TrustManager() };
+			SSLContext sslContext = SSLContext.getInstance("SSL", "SunJSSE");
+			sslContext.init(null, tm, new java.security.SecureRandom());
+			// 从上述SSLContext对象中得到SSLSocketFactory对象
+			SSLSocketFactory ssf = sslContext.getSocketFactory();
+
 			URL uploadUrl = new URL(uploadMediaUrl);
-			HttpURLConnection uploadConn = (HttpURLConnection) uploadUrl.openConnection();
+//			HttpURLConnection uploadConn = (HttpURLConnection)uploadUrl.openConnection();
+			HttpsURLConnection uploadConn = (HttpsURLConnection) uploadUrl.openConnection();
+			uploadConn.setSSLSocketFactory(ssf);
 			uploadConn.setDoOutput(true);
 			uploadConn.setDoInput(true);
 			uploadConn.setRequestMethod("POST");
