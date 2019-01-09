@@ -44,7 +44,8 @@ public class MaterialUtilTest {
 
 	@Test
 	public void testAddMedia() {
-		String url = "http://img11.360buyimg.com/evalpic/s800x800_jfs/t27109/152/2475339230/320180/e78d1c66/5c03dcd5N572cdb14.jpg!cc_800x800.jpg";
+		String url = "http://img11.360buyimg.com/evalpic/s800x800_jfs/t26734/129/1969194355/129516/3f85dfc9/5bf3d668N9cf5b959.png!cc_800x800.jpg";
+//		String url = "http://img11.360buyimg.com/evalpic/s800x800_jfs/t1/7132/27/3371/607688/5bd6bcbfE9ff1ba40/561a550a3fba6372.jpg!cc_800x800.jpg";
 		Response<WeixinMedia> response = MaterialUtil.addMedia(InitUtil.accessToken, "image", url);
 		WeixinMedia media = response.getResult();
 		System.out.println(JSON.toJSONString(media));
