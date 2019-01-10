@@ -203,15 +203,21 @@ public class CommonUtil {
 
 		if (null != jsonObject) {
 			try {
-				token = new Token();
-				token.setAccessToken(jsonObject.getString("access_token"));
-				token.setExpiresIn(jsonObject.getIntValue("expires_in"));
+				if(jsonObject.containsKey("access_token")){
+					token = new Token();
+					token.setAccessToken(jsonObject.getString("access_token"));
+					token.setExpiresIn(jsonObject.getIntValue("expires_in"));
+				}else{
+					log.error("获取token失败 errcode:{} errmsg:{}",
+							jsonObject.getIntValue("errcode"),
+							jsonObject.getString("errmsg"));
+				}
 			} catch (JSONException e) {
-				token = null;
 				// 获取token失败
 				log.error("获取token失败 errcode:{} errmsg:{}",
 						jsonObject.getIntValue("errcode"),
 						jsonObject.getString("errmsg"));
+				log.error("exception:", e);
 			}
 		}
 		return token;
