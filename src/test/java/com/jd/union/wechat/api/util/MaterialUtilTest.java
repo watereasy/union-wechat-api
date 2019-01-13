@@ -60,9 +60,9 @@ public class MaterialUtilTest {
 	
 	@Test
 	public void testAddNews(){
-		List<UArticle> uList = new ArrayList<UArticle>();
+		List<UArticle> uList = new ArrayList<>();
 		UArticle uArticle = new UArticle();
-		uArticle.setThumb_media_id("ohBGsOcqzyMpbKzLN8DFKYv0Xjw9nIkcKTedtHDWCwc"); // 永久的media_id
+		uArticle.setThumb_media_id("BiN4sqP0jD9V6WLgfNb1LjpLtqO89oU5gxzNBjELcw0"); // 永久的media_id
 		uArticle.setAuthor("boolink3");
 		uArticle.setTitle("双川恩图3");
 		uArticle.setContent_source_url("http://www.baidu.com");
@@ -178,4 +178,5 @@ public class MaterialUtilTest {
 		// 数据格式详细参照：http://mp.weixin.qq.com/wiki/12/2108cd7aafff7f388f41f37efa710204.html->素材管理->获取素材列表
 		System.out.println(jsonObj);
 	}
+
 }

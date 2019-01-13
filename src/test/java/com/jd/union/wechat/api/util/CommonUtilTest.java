@@ -50,6 +50,13 @@ public class CommonUtilTest {
 		System.out.println("createTime:" + CommUtil.getProperties(Constant.CREATE_TIME));
 		//tokenAccess = token.getAccessToken();
 	}
+
+	@Test
+	public void testUploadImg(){
+		String imgUrl = "http://img11.360buyimg.com/evalpic/s800x800_jfs/t26734/129/1969194355/129516/3f85dfc9/5bf3d668N9cf5b959.png!cc_800x800.jpg";
+		String url = CommonUtil.uploadImg(InitUtil.accessToken, imgUrl);
+		System.out.println("url:" + url);
+	}
 	
 	@Test
 	public void testGetWXIpList(){
