@@ -326,6 +326,8 @@ public class CommonUtil {
 			URL uploadUrl = new URL(uploadMediaUrl);
 //			HttpURLConnection uploadConn = (HttpURLConnection)uploadUrl.openConnection();
 			HttpsURLConnection uploadConn = (HttpsURLConnection) uploadUrl.openConnection();
+			uploadConn.setConnectTimeout(30000);
+			uploadConn.setReadTimeout(30000);
 			uploadConn.setSSLSocketFactory(ssf);
 			uploadConn.setDoOutput(true);
 			uploadConn.setDoInput(true);
@@ -337,6 +339,8 @@ public class CommonUtil {
 			
 			URL mediaUrl = new URL(mediaFileUrl);
 			HttpURLConnection meidaConn = (HttpURLConnection) mediaUrl.openConnection();
+			meidaConn.setConnectTimeout(30000);
+			meidaConn.setReadTimeout(30000);
 			meidaConn.setDoOutput(true);
 			meidaConn.setRequestMethod("GET");
 			
@@ -384,7 +388,7 @@ public class CommonUtil {
 			inputStream.close();
 			uploadConn.disconnect();
 		} catch (Exception e) {
-			log.error("上传媒体文件失败：{}", e);
+			log.error("上传媒体文件失败：", e);
 		}
 		return builder.toString();
 	}
