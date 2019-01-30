@@ -89,12 +89,15 @@ public class MaterialUtilTest {
 	@Test
 	public void testAddMaterial(){
 		//String url = "http://b.hiphotos.baidu.com/baike/g%3D0%3Bw%3D268/sign=92e00c9b8f5494ee97220a125ac8d2c8/29381f30e924b899c83ff41c6d061d950a7bf697.jpg";
-		String url = "http://pic35.nipic.com/20131115/6704106_153707247000_2.jpg";
+//		String url = "http://pic35.nipic.com/20131115/6704106_153707247000_2.jpg";
 		//String url = "http://v.youku.com/v_show/id_XMTI3MTQ1OTA1Ng";
-		String jsonData = "{'description':{'title':'testTitle11','introduction':'testDes11'}}";
+		String url = "https://img10.360buyimg.com/imgzone/jfs/t1/25193/32/5058/451801/5c37fea2E8449127b/73f587dcff1a8011.jpg";
+//		String jsonData = "{'description':{'title':'testTitle11"+ new Date().toString() +"','introduction':'testDes11'}}";
 		//String jsonData = "{'title':'testTitle2','introduction':'testDes2'}";
+		String jsonData = "{'description':{'title':'Title'20190114,'introduction':'Des'}}";
 		String type = "image";
-		Response<WeixinMedia> response = MaterialUtil.addMaterial(InitUtil.accessToken, type, url, jsonData);
+		String accessToken = "17_DcJTT-MozlaRTW6-aWvJOOJHfRz4oNiMMmo08zA3oHxjq-FhjovrH_KenK9wFt6WHOdzgSiE4uaCRaVcfJAGKedOJ6RzkAwT_V4lLeCqtYFynpIld_VObHIxSxCy9bGxvTC2bU6PuuOPGfT3YXYfAHANMN";
+		Response<WeixinMedia> response = MaterialUtil.addMaterial(accessToken, type, url, jsonData);
 		System.out.println(JSON.toJSONString(response));
 
 	}

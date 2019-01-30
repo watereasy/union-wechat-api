@@ -153,7 +153,7 @@ public class AdvancedUtilTest {
 	@Test
 	public void testSendTemplateMsg() {
 		Map<String, Object> wrapMap = new LinkedHashMap<String, Object>();
-		wrapMap.put("touser", "oNI8hs5zE2DjCN58Mdpiw8xkQYks"); // openId
+		wrapMap.put("touser", "ovyX41ToRe8bUchm-HfcPkp6pM5w"); // openId
 		wrapMap.put("template_id", "ejz6euaCT-hOVhwwDdyHgY_pJIkJdztbTlohwRv46UU"); // templateId
 		wrapMap.put("url", "http://weixin.qq.com/download");
 		wrapMap.put("topcolor", "#FF0000");
