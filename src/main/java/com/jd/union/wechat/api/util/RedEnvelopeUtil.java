@@ -1,6 +1,7 @@
 package com.jd.union.wechat.api.util;
 
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.parser.Feature;
 import com.jd.union.wechat.api.model.RedEnvelope;
 
 import org.apache.commons.lang.StringUtils;
@@ -158,7 +159,7 @@ public class RedEnvelopeUtil {
         red.setRisk_info(risk_info);
         red.setConsume_mch_id(consume_mch_id);
         // 过滤空域
-	    JSONObject jsonObj = JSONObject.parseObject(JSONObject.toJSONString(red));
+	    JSONObject jsonObj = JSONObject.parseObject(JSONObject.toJSONString(red), Feature.OrderedField);
 	    StringBuilder strBuil = new StringBuilder();
 	    // 拼接字符串
         String value;
